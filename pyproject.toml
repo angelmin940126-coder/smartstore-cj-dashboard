@@ -1,2 +1,11 @@
+[project]
+name = "smartstore-cj-dashboard"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "openpyxl==3.1.5",
+  "bcrypt==5.0.0"
+]
+
 [tool.vercel]
 entrypoint = "api.dashboard:handler"
