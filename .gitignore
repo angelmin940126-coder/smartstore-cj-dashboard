@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.local.example
+__pycache__/
+*.py[cod]
+.vercel/
+work/
+outputs/
+data/
+*.log

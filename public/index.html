@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>스마트스토어 CJ 출고 대시보드</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1>스마트스토어 CJ 출고</h1>
+        <p>주문 조회, 발주확인, CJ LOIS 업로드 파일 생성, 송장 입력까지 한 화면에서 처리합니다.</p>
+      </div>
+      <div class="status" id="status">대기 중</div>
+    </header>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>주문 처리</h2>
+        <span>기존 CS대시보드 API 설정 사용</span>
+      </div>
+      <input id="accessToken" type="hidden">
+      <input id="clientId" type="hidden">
+      <input id="clientSecret" type="hidden">
+      <div class="grid">
+        <label>
+          <span>조회 시작일</span>
+          <input id="dateFrom" type="date">
+        </label>
+        <label>
+          <span>조회 종료일</span>
+          <input id="dateTo" type="date">
+        </label>
+        <label>
+          <span>최대 주문 수</span>
+          <input id="maxOrders" type="number" min="1" max="4999" value="300">
+        </label>
+      </div>
+      <div class="actions workflow-actions">
+        <button id="testToken">연결 상태 확인</button>
+        <button id="fetchOrders" class="primary">주문조회</button>
+        <button id="placeOrders" disabled>발주확인</button>
+        <a id="downloadLink" class="download hidden" href="#">CJ 엑셀 다운로드</a>
+        <button id="downloadOutboundList">출고 리스트 다운로드</button>
+      </div>
+      <div id="orderError" class="inline-error hidden"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>주문 리스트</h2>
+        <span id="summary">0건</span>
+      </div>
+      <div class="subtabs" role="tablist">
+        <button id="newOrdersTab" class="subtab active" type="button">신규 주문 <span id="newOrdersCount">0</span></button>
+        <button id="confirmedOrdersTab" class="subtab" type="button">발주확인 완료 <span id="confirmedOrdersCount">0</span></button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>상품주문번호</th>
+              <th>수취인</th>
+              <th>연락처</th>
+              <th>주소</th>
+              <th>상품</th>
+              <th>수량</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr><td colspan="6" class="empty">아직 조회된 주문이 없습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button id="prevOrdersPage" disabled>이전</button>
+        <span id="ordersPageInfo">1 / 1</span>
+        <button id="nextOrdersPage" disabled>다음</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>CJ 송장 결과 처리</h2>
+        <span id="dispatchSummary">대기 중</span>
+      </div>
+      <form id="trackingForm" class="inline-form">
+        <div>
+          <h3>송장 결과 읽기</h3>
+          <p>CJ에서 내려받은 송장 파일을 읽어 스마트스토어 운송장 입력 목록을 만듭니다.</p>
+        </div>
+        <input name="file" type="file" accept=".xlsx,.xls">
+        <input name="password" type="password" placeholder="필요 시 비밀번호">
+        <button type="submit">송장번호 읽기</button>
+      </form>
+      <div class="actions">
+        <button id="sendDispatch" class="primary">스마트스토어 운송장 입력</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>상품주문번호</th>
+              <th>운송장번호</th>
+              <th>택배사</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="trackingBody">
+            <tr><td colspan="4" class="empty">CJ 송장 결과 파일을 먼저 읽어주세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="shipments" type="button">일자별 출고현황</button>
+        <button class="tab" data-tab="logs" type="button">처리 로그</button>
+      </div>
+
+      <div id="tabShipments" class="tab-panel active">
+        <div class="section-title">
+          <h2>출고현황</h2>
+          <span id="shipmentSummary">0건</span>
+        </div>
+        <div class="grid compact">
+          <label>
+            <span>시작일</span>
+            <input id="shipDateFrom" type="date">
+          </label>
+          <label>
+            <span>종료일</span>
+            <input id="shipDateTo" type="date">
+          </label>
+          <label>
+            <span>주문/운송장 검색</span>
+            <input id="shipmentQuery" type="search" placeholder="상품주문번호 또는 운송장번호">
+          </label>
+          <label>
+            <span>상태</span>
+            <select id="shipmentStatus">
+              <option value="">전체</option>
+              <option value="READY">전송대기</option>
+              <option value="SENT">전송완료</option>
+              <option value="FAILED">전송실패</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions">
+          <button id="loadShipments">현황 조회</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>출고일</th>
+                <th>상품주문번호</th>
+                <th>운송장번호</th>
+                <th>택배사</th>
+                <th>상태</th>
+                <th>오류</th>
+              </tr>
+            </thead>
+            <tbody id="shipmentsBody">
+              <tr><td colspan="6" class="empty">출고현황을 조회해주세요.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tabLogs" class="tab-panel log-panel">
+        <div class="section-title">
+          <h2>처리 로그</h2>
+          <span>실시간</span>
+        </div>
+        <pre id="log"></pre>
+      </div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
