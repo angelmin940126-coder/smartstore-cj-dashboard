@@ -401,11 +401,14 @@ def collect_product_order_ids(changed_payload: dict, statuses: set[str] | None =
 def fetch_naver_orders(payload: dict) -> dict:
     token = (payload.get("accessToken") or "").strip()
     if not token:
-        client_id = (payload.get("clientId") or os.environ.get("NAVER_COMMERCE_CLIENT_ID") or "").strip()
-        client_secret = (payload.get("clientSecret") or os.environ.get("NAVER_COMMERCE_CLIENT_SECRET") or "").strip()
-        if not client_id or not client_secret:
-            raise ValueError("access token 또는 client_id/client_secret이 필요합니다.")
-        token = get_access_token(client_id, client_secret)
+        if (os.environ.get("NAVER_PROXY_URL") or "").strip():
+            token = ""
+        else:
+            client_id = (payload.get("clientId") or os.environ.get("NAVER_COMMERCE_CLIENT_ID") or "").strip()
+            client_secret = (payload.get("clientSecret") or os.environ.get("NAVER_COMMERCE_CLIENT_SECRET") or "").strip()
+            if not client_id or not client_secret:
+                raise ValueError("access token 또는 client_id/client_secret이 필요합니다.")
+            token = get_access_token(client_id, client_secret)
 
     max_orders = int(payload.get("maxOrders") or 300)
     date_from = payload.get("dateFrom") or dt.datetime.now().strftime("%Y-%m-%d")
@@ -709,6 +712,8 @@ def resolve_access_token(payload: dict) -> str:
     token = (payload.get("accessToken") or "").strip()
     if token:
         return token
+    if (os.environ.get("NAVER_PROXY_URL") or "").strip():
+        return ""
     client_id = (payload.get("clientId") or os.environ.get("NAVER_COMMERCE_CLIENT_ID") or "").strip()
     client_secret = (payload.get("clientSecret") or os.environ.get("NAVER_COMMERCE_CLIENT_SECRET") or "").strip()
     if not client_id or not client_secret:
