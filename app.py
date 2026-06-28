@@ -90,7 +90,6 @@ class WorkbookRead:
 def ensure_dirs() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not SHIPMENTS_DB.exists():
         SHIPMENTS_DB.write_text("[]", encoding="utf-8")
