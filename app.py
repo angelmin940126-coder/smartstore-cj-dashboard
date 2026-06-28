@@ -859,7 +859,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_error(404)
 
     def serve_file(self, path: Path, content_type: str) -> None:
-        body = path.read_bytes()
+        if path.exists():
+            body = path.read_bytes()
+        elif IS_VERCEL and path.parent == PUBLIC_DIR:
+            from api.static_assets import ASSETS
+
+            content = ASSETS.get(path.name)
+            if content is None:
+                self.send_error(404)
+                return
+            body = content.encode("utf-8")
+        else:
+            self.send_error(404)
+            return
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
