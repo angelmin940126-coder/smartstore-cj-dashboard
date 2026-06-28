@@ -8,3 +8,5 @@ work/
 outputs/
 data/
 *.log
+
+.vercel
