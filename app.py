@@ -759,9 +759,34 @@ def product_order_ids_from_payload(payload: dict) -> list[str]:
     return list(dict.fromkeys(value for value in collected if value))
 
 
+def merge_records_for_download(*groups: list[dict]) -> list[dict]:
+    merged = []
+    seen = set()
+    for group in groups:
+        if not isinstance(group, list):
+            continue
+        for record in group:
+            if not isinstance(record, dict):
+                continue
+            key = str(
+                record.get("productOrderNo")
+                or record.get("productOrderId")
+                or record.get("상품주문번호")
+                or record.get("?곹뭹二쇰Ц踰덊샇")
+                or ""
+            ).strip()
+            if key and key in seen:
+                continue
+            if key:
+                seen.add(key)
+            merged.append(record)
+    return merged
+
+
 def place_orders(payload: dict) -> dict:
     token = resolve_access_token(payload)
     records = payload.get("records") or []
+    existing_confirmed_records = payload.get("existingConfirmedRecords") or []
     product_order_ids = product_order_ids_from_payload(payload)
     if not product_order_ids:
         raise ValueError("발주확인할 주문 목록이 없습니다.")
@@ -790,12 +815,13 @@ def place_orders(payload: dict) -> dict:
         except Exception as exc:
             failed += len(batch)
             results.append({"ok": False, "count": len(batch), "error": str(exc)})
-    output = create_smartstore_excel(confirmed_records) if confirmed_records and failed == 0 else None
+    download_records = merge_records_for_download(existing_confirmed_records, confirmed_records)
+    output = create_smartstore_excel(download_records) if download_records and failed == 0 else None
     return {
         "confirmed": confirmed,
         "failed": failed,
         "results": results,
-        "downloadRows": len(confirmed_records) if output else 0,
+        "downloadRows": len(download_records) if output else 0,
         "downloadName": output.name if output else "",
         "downloadUrl": f"/download/{urllib.parse.quote(output.name)}" if output else "",
     }

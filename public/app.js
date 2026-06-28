@@ -273,6 +273,7 @@ document.querySelector("#placeOrders").addEventListener("click", async () => {
     const data = await postJson("/api/orders/place-order", {
       ...credentialPayload(),
       records: currentOrders,
+      existingConfirmedRecords: confirmedOrders,
     });
     if (data.failed > 0) {
       setStatus("확인 필요");
